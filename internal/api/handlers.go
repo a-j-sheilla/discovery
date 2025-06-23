@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -178,6 +179,7 @@ func (h *Handlers) AddToWatchlist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.watchlistService.AddToWatchlist(userID, item); err != nil {
+		log.Printf("Watchlist validation error: %v, Item: %+v", err, item)
 		http.Error(w, fmt.Sprintf("Failed to add to watchlist: %v", err), http.StatusBadRequest)
 		return
 	}
