@@ -126,15 +126,25 @@ class MovieDiscoveryApp {
     }
 
     showToast(message, type = 'info') {
+        console.log('showToast called:', { message, type });
+
         const toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            console.error('Toast container not found!');
+            return;
+        }
+
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
         toast.textContent = message;
-        
+
+        console.log('Toast element created:', toast);
         toastContainer.appendChild(toast);
-        
+        console.log('Toast added to container');
+
         setTimeout(() => {
             toast.remove();
+            console.log('Toast removed');
         }, 5000);
     }
 

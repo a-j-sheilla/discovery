@@ -126,29 +126,52 @@ MovieDiscoveryApp.prototype.createWatchlistCard = function(item) {
 
 MovieDiscoveryApp.prototype.toggleWatchlist = async function(itemId, itemType, title, posterPath) {
     try {
+        // Find the button that was clicked for immediate visual feedback
+        const clickedButton = event?.target?.closest('.watchlist-btn');
+        if (clickedButton) {
+            clickedButton.style.opacity = '0.5';
+            clickedButton.disabled = true;
+        }
+
         // Check if item is already in watchlist
         const isInWatchlist = await this.isInWatchlist(itemId, itemType);
-        
+
         if (isInWatchlist) {
             await this.removeFromWatchlist(itemId, itemType);
         } else {
             await this.addToWatchlist(itemId, itemType, title, posterPath);
         }
-        
+
         // Update button state
-        this.updateWatchlistButtons();
-        
+        await this.updateWatchlistButtons();
+
         // Refresh watchlist if currently viewing it
         if (this.currentSection === 'watchlist') {
             this.loadWatchlist();
         }
+
+        // Re-enable button
+        if (clickedButton) {
+            clickedButton.style.opacity = '1';
+            clickedButton.disabled = false;
+        }
     } catch (error) {
         console.error('Failed to toggle watchlist:', error);
+        this.showToast('Failed to update watchlist. Please try again.', 'error');
+
+        // Re-enable button on error
+        const clickedButton = event?.target?.closest('.watchlist-btn');
+        if (clickedButton) {
+            clickedButton.style.opacity = '1';
+            clickedButton.disabled = false;
+        }
     }
 };
 
 MovieDiscoveryApp.prototype.addToWatchlist = async function(itemId, itemType, title, posterPath) {
     try {
+        console.log('Adding to watchlist:', { itemId, itemType, title, posterPath });
+
         const watchlistItem = {
             id: itemId.toString(),
             type: itemType,
@@ -158,13 +181,18 @@ MovieDiscoveryApp.prototype.addToWatchlist = async function(itemId, itemType, ti
             rating: 0
         };
 
-        await this.apiRequest('/api/v1/watchlist', {
+        console.log('Watchlist item data:', JSON.stringify(watchlistItem, null, 2));
+
+        const response = await this.apiRequest('/api/v1/watchlist', {
             method: 'POST',
             body: JSON.stringify(watchlistItem)
         });
 
+        console.log('API response:', response);
         this.showToast(`Added "${title}" to watchlist`, 'success');
+        console.log('Toast shown for success');
     } catch (error) {
+        console.error('Error adding to watchlist:', error);
         this.showToast('Failed to add to watchlist', 'error');
         throw error;
     }
