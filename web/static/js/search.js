@@ -2,12 +2,12 @@
 MovieDiscoveryApp.prototype.searchMovies = async function(query, page = 1) {
     try {
         const data = await this.apiRequest(`/api/v1/search/movies?q=${encodeURIComponent(query)}&page=${page}`);
-        this.displaySearchResults(data, 'movies');
+        this.displaySearchResults(data, 'movie');
         this.currentPage = page;
     } catch (error) {
         console.error('Movie search failed:', error);
         // Show demo data when API fails
-        this.showDemoSearchResults(query, 'movies');
+        this.showDemoSearchResults(query, 'movie');
     }
 };
 
@@ -28,7 +28,7 @@ MovieDiscoveryApp.prototype.displaySearchResults = function(data, type) {
     const resultsCount = document.getElementById('results-count');
 
     // Update title and count
-    const typeLabel = type === 'movies' ? 'Movies' : 'TV Shows';
+    const typeLabel = type === 'movie' ? 'Movies' : 'TV Shows';
     resultsTitle.textContent = `${typeLabel} - "${this.searchQuery}"`;
     resultsCount.textContent = `${data.total_results} results found`;
 
@@ -44,7 +44,7 @@ MovieDiscoveryApp.prototype.displaySearchResults = function(data, type) {
 
         // Create pagination
         this.createPagination(data.page, data.total_pages, (page) => {
-            if (type === 'movies') {
+            if (type === 'movie') {
                 this.searchMovies(this.searchQuery, page);
             } else {
                 this.searchTVShows(this.searchQuery, page);
@@ -208,14 +208,16 @@ MovieDiscoveryApp.prototype.displaySearchSuggestions = function(suggestions, dro
         item.addEventListener('click', () => {
             document.getElementById('search-input').value = suggestion.title;
             this.searchQuery = suggestion.title;
-            this.currentSearchType = suggestion.type === 'movie' ? 'movies' : 'tv';
-            
+            this.currentSearchType = suggestion.type;
+
             // Update search type button
             document.querySelectorAll('.search-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            document.querySelector(`[data-type="${this.currentSearchType}"]`).classList.add('active');
-            
+            // Map the type to the correct button data-type
+            const buttonType = suggestion.type === 'movie' ? 'movies' : 'tv';
+            document.querySelector(`[data-type="${buttonType}"]`).classList.add('active');
+
             this.performSearch();
             dropdown.style.display = 'none';
         });
