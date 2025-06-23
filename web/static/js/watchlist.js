@@ -82,12 +82,12 @@ MovieDiscoveryApp.prototype.createWatchlistCard = function(item) {
     card.className = 'movie-card';
     card.style.position = 'relative';
 
-    const posterUrl = item.poster_path || '/static/images/no-poster.jpg';
+    const posterUrl = item.poster_path || '/static/images/placeholder.svg';
     const addedDate = new Date(item.added_at).toLocaleDateString();
 
     card.innerHTML = `
-        <img src="${posterUrl}" alt="${item.title}" class="movie-poster" 
-             onerror="this.src='/static/images/no-poster.jpg'">
+        <img src="${posterUrl}" alt="${item.title}" class="movie-poster"
+             onerror="this.src='/static/images/placeholder.svg'">
         <div class="watchlist-actions">
             <button class="action-btn remove-btn" onclick="app.removeFromWatchlist('${item.id}', '${item.type}')" title="Remove from watchlist">
                 <i class="fas fa-trash"></i>

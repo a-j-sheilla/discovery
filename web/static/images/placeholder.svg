@@ -1,0 +1,11 @@
+<svg width="300" height="450" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="450" fill="#f0f0f0" stroke="#ddd" stroke-width="2"/>
+  <text x="150" y="200" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#999">
+    No Poster
+  </text>
+  <text x="150" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#999">
+    Available
+  </text>
+  <circle cx="150" cy="250" r="30" fill="none" stroke="#ccc" stroke-width="2"/>
+  <path d="M130 240 L150 260 L170 240" stroke="#ccc" stroke-width="2" fill="none"/>
+</svg>

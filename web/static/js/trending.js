@@ -6,7 +6,7 @@ MovieDiscoveryApp.prototype.loadTrending = async function(timeWindow = 'week') {
         this.updateTrendingFilter(timeWindow);
     } catch (error) {
         console.error('Failed to load trending content:', error);
-        this.showToast('Failed to load trending content', 'error');
+        this.showDemoTrending(timeWindow);
     }
 };
 
@@ -22,9 +22,12 @@ MovieDiscoveryApp.prototype.displayTrending = function(data) {
     } else {
         trendingGrid.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                <i class="fas fa-fire" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 20px;"></i>
-                <h3 style="color: var(--text-secondary); margin-bottom: 10px;">No trending content available</h3>
-                <p style="color: var(--text-secondary);">Please try again later</p>
+                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 20px;"></i>
+                <h3 style="color: var(--text-secondary); margin-bottom: 10px;">Trending Content Unavailable</h3>
+                <p style="color: var(--text-secondary);">This feature requires valid TMDB API keys</p>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 10px;">
+                    To enable trending content, add your TMDB API key to the .env file
+                </p>
             </div>
         `;
     }
@@ -201,6 +204,78 @@ MovieDiscoveryApp.prototype.addTrendingStyles = function() {
         style.id = 'trending-styles';
         document.head.appendChild(style);
     }
+};
+
+// Demo trending data
+MovieDiscoveryApp.prototype.showDemoTrending = function(timeWindow) {
+    const demoTrendingMovies = [
+        {
+            id: 550,
+            title: "Fight Club",
+            overview: "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression.",
+            release_date: "1999-10-15",
+            poster_path: null,
+            vote_average: 8.4,
+            popularity: 95.5
+        },
+        {
+            id: 13,
+            title: "Forrest Gump",
+            overview: "A man with a low IQ has accomplished great things in his life.",
+            release_date: "1994-07-06",
+            poster_path: null,
+            vote_average: 8.5,
+            popularity: 88.2
+        },
+        {
+            id: 27205,
+            title: "Inception",
+            overview: "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious.",
+            release_date: "2010-07-16",
+            poster_path: null,
+            vote_average: 8.4,
+            popularity: 92.1
+        },
+        {
+            id: 278,
+            title: "The Shawshank Redemption",
+            overview: "Two imprisoned men bond over a number of years, finding solace and eventual redemption.",
+            release_date: "1994-09-23",
+            poster_path: null,
+            vote_average: 9.3,
+            popularity: 87.9
+        }
+    ];
+
+    const demoData = {
+        page: 1,
+        results: demoTrendingMovies,
+        total_pages: 1,
+        total_results: demoTrendingMovies.length
+    };
+
+    this.displayTrending(demoData);
+    this.updateTrendingFilter(timeWindow);
+
+    // Add demo notice
+    const trendingGrid = document.getElementById('trending-grid');
+    const demoNotice = document.createElement('div');
+    demoNotice.style.cssText = `
+        grid-column: 1 / -1;
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        text-align: center;
+    `;
+    demoNotice.innerHTML = `
+        <i class="fas fa-info-circle"></i>
+        <strong>Demo Mode:</strong> Showing sample trending data. Add valid TMDB API keys to see real trending movies.
+    `;
+
+    trendingGrid.insertBefore(demoNotice, trendingGrid.firstChild);
 };
 
 // Global functions for trending filters

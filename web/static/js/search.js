@@ -6,6 +6,8 @@ MovieDiscoveryApp.prototype.searchMovies = async function(query, page = 1) {
         this.currentPage = page;
     } catch (error) {
         console.error('Movie search failed:', error);
+        // Show demo data when API fails
+        this.showDemoSearchResults(query, 'movies');
     }
 };
 
@@ -51,12 +53,18 @@ MovieDiscoveryApp.prototype.displaySearchResults = function(data, type) {
 
         this.showSearchResults();
     } else {
-        // No results found
+        // No results found or API error
+        const isAPIError = data.error || (data.results && data.results.length === 0 && data.total_results === 0);
+        const errorMessage = isAPIError ?
+            'Search temporarily unavailable. Please check API configuration.' :
+            'No results found. Try searching with different keywords.';
+
         resultsGrid.innerHTML = `
             <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
-                <i class="fas fa-search" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 20px;"></i>
-                <h3 style="color: var(--text-secondary); margin-bottom: 10px;">No results found</h3>
-                <p style="color: var(--text-secondary);">Try searching with different keywords</p>
+                <i class="fas fa-${isAPIError ? 'exclamation-triangle' : 'search'}" style="font-size: 3rem; color: var(--text-secondary); margin-bottom: 20px;"></i>
+                <h3 style="color: var(--text-secondary); margin-bottom: 10px;">${isAPIError ? 'Service Unavailable' : 'No Results Found'}</h3>
+                <p style="color: var(--text-secondary);">${errorMessage}</p>
+                ${isAPIError ? '<p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 10px;">Note: This demo requires valid TMDB API keys</p>' : ''}
             </div>
         `;
         document.getElementById('pagination').innerHTML = '';
@@ -222,6 +230,75 @@ MovieDiscoveryApp.prototype.displaySearchSuggestions = function(suggestions, dro
 MovieDiscoveryApp.prototype.setupAdvancedSearch = function() {
     // This could be expanded to include genre filters, year ranges, rating filters, etc.
     // For now, we'll keep it simple with the basic search functionality
+};
+
+// Demo data for when API is not available
+MovieDiscoveryApp.prototype.showDemoSearchResults = function(query, type) {
+    const demoMovies = [
+        {
+            id: 550,
+            title: "Fight Club",
+            overview: "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy.",
+            release_date: "1999-10-15",
+            poster_path: null,
+            vote_average: 8.4,
+            popularity: 61.416
+        },
+        {
+            id: 13,
+            title: "Forrest Gump",
+            overview: "A man with a low IQ has accomplished great things in his life and been present during significant historic events.",
+            release_date: "1994-07-06",
+            poster_path: null,
+            vote_average: 8.5,
+            popularity: 75.123
+        },
+        {
+            id: 27205,
+            title: "Inception",
+            overview: "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets.",
+            release_date: "2010-07-16",
+            poster_path: null,
+            vote_average: 8.4,
+            popularity: 151.489
+        }
+    ];
+
+    const demoData = {
+        page: 1,
+        results: demoMovies.filter(movie =>
+            movie.title.toLowerCase().includes(query.toLowerCase())
+        ),
+        total_pages: 1,
+        total_results: demoMovies.length
+    };
+
+    // If no matches, show all demo movies
+    if (demoData.results.length === 0) {
+        demoData.results = demoMovies;
+    }
+
+    this.displaySearchResults(demoData, type);
+
+    // Show demo notice
+    const resultsContainer = document.getElementById('search-results');
+    const demoNotice = document.createElement('div');
+    demoNotice.style.cssText = `
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        text-align: center;
+    `;
+    demoNotice.innerHTML = `
+        <i class="fas fa-info-circle"></i>
+        <strong>Demo Mode:</strong> Showing sample data. Add valid API keys to see real movie data.
+    `;
+
+    const resultsGrid = document.getElementById('results-grid');
+    resultsContainer.insertBefore(demoNotice, resultsGrid);
 };
 
 // Initialize search suggestions when the app loads

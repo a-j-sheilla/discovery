@@ -25,9 +25,9 @@ MovieDiscoveryApp.prototype.displayMovieDetails = function(movie, itemType) {
         ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
         : '/static/images/no-backdrop.jpg';
     
-    const posterUrl = movie.poster_path 
+    const posterUrl = movie.poster_path
         ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-        : '/static/images/no-poster.jpg';
+        : '/static/images/placeholder.svg';
 
     const title = movie.title || movie.name || 'Unknown Title';
     const releaseDate = movie.release_date || movie.first_air_date || '';
@@ -56,8 +56,8 @@ MovieDiscoveryApp.prototype.displayMovieDetails = function(movie, itemType) {
         
         <div class="movie-details-content">
             <div class="movie-details-header">
-                <img src="${posterUrl}" alt="${title}" class="movie-details-poster" 
-                     onerror="this.src='/static/images/no-poster.jpg'">
+                <img src="${posterUrl}" alt="${title}" class="movie-details-poster"
+                     onerror="this.src='/static/images/placeholder.svg'">
                 
                 <div class="movie-details-info">
                     <h1 class="movie-details-title">${title}</h1>
