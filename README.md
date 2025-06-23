@@ -57,6 +57,11 @@ A comprehensive entertainment discovery platform built with Go, where users can 
    HOST=localhost
    ```
 
+   **API Integration Status:**
+   - ✅ **TMDB API**: Fully integrated for movie/TV search, trending content, and detailed information
+   - ✅ **OMDB API**: Integrated for additional movie metadata (ratings, awards, plot details)
+   - ✅ **Real Data**: Application now returns real movie data with actual posters and information
+
 4. **Run the application**
    ```bash
    go run cmd/server/main.go
