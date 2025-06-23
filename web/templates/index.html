@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Discovery App</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-film"></i>
+                <span>Movie Discovery</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#" onclick="showHome()" class="nav-link active">Home</a></li>
+                <li><a href="#" onclick="showTrending()" class="nav-link">Trending</a></li>
+                <li><a href="#" onclick="showWatchlist()" class="nav-link">My Watchlist</a></li>
+            </ul>
+            <div class="theme-toggle">
+                <button id="theme-toggle-btn" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Home Section -->
+        <section id="home-section" class="section active">
+            <div class="hero">
+                <h1>Discover Your Next Favorite Movie or TV Show</h1>
+                <p>Search through millions of titles, get detailed information, and manage your personal watchlist</p>
+                
+                <!-- Search Bar -->
+                <div class="search-container">
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="Search for movies or TV shows..." autocomplete="off">
+                        <div class="search-buttons">
+                            <button onclick="searchMovies()" class="search-btn active" data-type="movies">Movies</button>
+                            <button onclick="searchTVShows()" class="search-btn" data-type="tv">TV Shows</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Results -->
+            <div id="search-results" class="results-container" style="display: none;">
+                <div class="results-header">
+                    <h2 id="results-title">Search Results</h2>
+                    <div class="results-info">
+                        <span id="results-count"></span>
+                    </div>
+                </div>
+                <div id="results-grid" class="results-grid"></div>
+                <div id="pagination" class="pagination"></div>
+            </div>
+        </section>
+
+        <!-- Trending Section -->
+        <section id="trending-section" class="section">
+            <div class="section-header">
+                <h2>Trending Now</h2>
+                <div class="trending-filters">
+                    <button onclick="loadTrending('day')" class="filter-btn active">Today</button>
+                    <button onclick="loadTrending('week')" class="filter-btn">This Week</button>
+                </div>
+            </div>
+            <div id="trending-grid" class="results-grid"></div>
+        </section>
+
+        <!-- Watchlist Section -->
+        <section id="watchlist-section" class="section">
+            <div class="section-header">
+                <h2>My Watchlist</h2>
+                <div class="watchlist-filters">
+                    <button onclick="filterWatchlist('all')" class="filter-btn active">All</button>
+                    <button onclick="filterWatchlist('unwatched')" class="filter-btn">To Watch</button>
+                    <button onclick="filterWatchlist('watched')" class="filter-btn">Watched</button>
+                </div>
+            </div>
+            <div id="watchlist-stats" class="watchlist-stats"></div>
+            <div id="watchlist-grid" class="results-grid"></div>
+        </section>
+
+        <!-- Movie Details Modal -->
+        <div id="movie-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <div id="movie-details" class="movie-details"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/watchlist.js"></script>
+    <script src="/static/js/search.js"></script>
+    <script src="/static/js/trending.js"></script>
+    <script src="/static/js/details.js"></script>
+</body>
+</html>
