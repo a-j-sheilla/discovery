@@ -173,6 +173,28 @@ class MovieDiscoveryApp {
         }
     }
 
+    // Silent API request without loading indicator (for search suggestions)
+    async silentApiRequest(url, options = {}) {
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Silent API request failed:', error);
+            throw error;
+        }
+    }
+
     createMovieCard(item, type = 'movie') {
         const card = document.createElement('div');
         card.className = 'movie-card';
