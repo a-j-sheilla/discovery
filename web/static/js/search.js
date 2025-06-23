@@ -74,12 +74,12 @@ MovieDiscoveryApp.prototype.displaySearchResults = function(data, type) {
 
 MovieDiscoveryApp.prototype.getSearchSuggestions = async function(query) {
     if (query.length < 2) return [];
-    
+
     try {
-        // Get suggestions from both movies and TV shows
+        // Get suggestions from both movies and TV shows using silent API requests
         const [movieData, tvData] = await Promise.all([
-            this.apiRequest(`/api/v1/search/movies?q=${encodeURIComponent(query)}&page=1`),
-            this.apiRequest(`/api/v1/search/tv?q=${encodeURIComponent(query)}&page=1`)
+            this.silentApiRequest(`/api/v1/search/movies?q=${encodeURIComponent(query)}&page=1`),
+            this.silentApiRequest(`/api/v1/search/tv?q=${encodeURIComponent(query)}&page=1`)
         ]);
 
         const suggestions = [];
