@@ -206,16 +206,19 @@ func (s *WatchlistService) GetWatchlistStats(userID string) (map[string]interfac
 	}
 
 	stats := map[string]interface{}{
-		"total_items":    len(watchlist),
-		"watched_items":  0,
-		"unwatched_items": 0,
-		"movies":         0,
-		"tv_shows":       0,
-		"average_rating": 0.0,
+		"total_items":      len(watchlist),
+		"watched_items":    0,
+		"unwatched_items":  0,
+		"movies":           0,
+		"tv_shows":         0,
+		"average_rating":   0.0,
+		"highest_rated":    0.0,
+		"total_watch_time": 0, // This could be enhanced with actual runtime data
 	}
 
 	var totalRating float64
 	var ratedItems int
+	var highestRating float64
 
 	for _, item := range watchlist {
 		if item.Watched {
@@ -223,20 +226,25 @@ func (s *WatchlistService) GetWatchlistStats(userID string) (map[string]interfac
 			if item.Rating > 0 {
 				totalRating += item.Rating
 				ratedItems++
+				if item.Rating > highestRating {
+					highestRating = item.Rating
+				}
 			}
 		} else {
 			stats["unwatched_items"] = stats["unwatched_items"].(int) + 1
 		}
 
-		if item.Type == "movie" {
+		switch item.Type {
+		case "movie":
 			stats["movies"] = stats["movies"].(int) + 1
-		} else if item.Type == "tv" {
+		case "tv":
 			stats["tv_shows"] = stats["tv_shows"].(int) + 1
 		}
 	}
 
 	if ratedItems > 0 {
 		stats["average_rating"] = totalRating / float64(ratedItems)
+		stats["highest_rated"] = highestRating
 	}
 
 	return stats, nil
