@@ -544,6 +544,18 @@ func (h *Handlers) DiscoverByGenre(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Parse content type parameter (movies or tv)
+	contentType := r.URL.Query().Get("type")
+	if contentType == "" {
+		contentType = "movies" // Default to movies
+	}
+
+	// Validate content type
+	if contentType != "movies" && contentType != "tv" {
+		http.Error(w, "Invalid content type. Must be 'movies' or 'tv'", http.StatusBadRequest)
+		return
+	}
+
 	// Parse page parameter
 	page := 1
 	if pageStr := r.URL.Query().Get("page"); pageStr != "" {
@@ -581,10 +593,21 @@ func (h *Handlers) DiscoverByGenre(w http.ResponseWriter, r *http.Request) {
 	// Validate filters
 	filters.Validate()
 
-	results, err := h.genreService.DiscoverMoviesByGenre(genreID, page, filters)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to discover movies: %v", err), http.StatusInternalServerError)
-		return
+	// Call appropriate discovery method based on content type
+	var results *models.SearchResult
+	switch contentType {
+	case "movies":
+		results, err = h.genreService.DiscoverMoviesByGenre(genreID, page, filters)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to discover movies: %v", err), http.StatusInternalServerError)
+			return
+		}
+	case "tv":
+		results, err = h.genreService.DiscoverTVShowsByGenre(genreID, page, filters)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to discover TV shows: %v", err), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")
