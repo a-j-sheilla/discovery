@@ -145,7 +145,74 @@
         <div id="movie-modal" class="modal">
             <div class="modal-content">
                 <span class="close" onclick="closeModal()">&times;</span>
-                <div id="movie-details" class="movie-details"></div>
+                <div id="movie-details" class="movie-details">
+                    <!-- Movie details content will be loaded here -->
+                </div>
+
+                <!-- Advanced Features Tabs -->
+                <div class="advanced-features-tabs">
+                    <button class="tab-btn active" onclick="showAdvancedTab('overview')">Overview</button>
+                    <button class="tab-btn" onclick="showAdvancedTab('trailers')">Trailers</button>
+                    <button class="tab-btn" onclick="showAdvancedTab('providers')">Where to Watch</button>
+                </div>
+
+                <!-- Advanced Features Content -->
+                <div class="advanced-features-content">
+                    <div id="overview-tab" class="tab-content active">
+                        <!-- Overview content (existing movie details) -->
+                    </div>
+
+                    <div id="trailers-tab" class="tab-content">
+                        <div id="trailers-container" class="trailers-container">
+                            <div class="loading-trailers">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Loading trailers...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="providers-tab" class="tab-content">
+                        <div class="region-selector">
+                            <label for="region-select">Region:</label>
+                            <select id="region-select" onchange="changeRegion()">
+                                <option value="US">United States</option>
+                                <option value="GB">United Kingdom</option>
+                                <option value="CA">Canada</option>
+                                <option value="AU">Australia</option>
+                                <option value="DE">Germany</option>
+                                <option value="FR">France</option>
+                                <option value="IT">Italy</option>
+                                <option value="ES">Spain</option>
+                                <option value="JP">Japan</option>
+                                <option value="KR">South Korea</option>
+                            </select>
+                        </div>
+                        <div id="providers-container" class="providers-container">
+                            <div class="loading-providers">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Loading streaming information...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trailer Modal -->
+        <div id="trailer-modal" class="modal trailer-modal">
+            <div class="modal-content trailer-modal-content">
+                <div class="trailer-modal-header">
+                    <h3 id="trailer-modal-title">Trailer</h3>
+                    <span class="close" onclick="closeTrailerModal()">&times;</span>
+                </div>
+                <div class="trailer-modal-body">
+                    <iframe id="trailer-iframe"
+                            width="100%"
+                            height="400"
+                            frameborder="0"
+                            allowfullscreen>
+                    </iframe>
+                </div>
             </div>
         </div>
     </main>
@@ -164,5 +231,6 @@
     <script src="/static/js/trending.js?v=2.0"></script>
     <script src="/static/js/details.js?v=2.0"></script>
     <script src="/static/js/genres.js?v=2.0"></script>
+    <script src="/static/js/advanced-features.js?v=2.0"></script>
 </body>
 </html>
