@@ -130,6 +130,27 @@ func (h *Handlers) GetMovieDetails(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(movie)
 }
 
+// GetTVShowDetails handles TV show details requests
+func (h *Handlers) GetTVShowDetails(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	tvIDStr := vars["id"]
+
+	tvID, err := strconv.Atoi(tvIDStr)
+	if err != nil {
+		http.Error(w, "Invalid TV show ID", http.StatusBadRequest)
+		return
+	}
+
+	tvShow, err := h.discoveryService.GetTVShowDetails(tvID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get TV show details: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(tvShow)
+}
+
 // GetTrendingMovies handles trending movies requests
 func (h *Handlers) GetTrendingMovies(w http.ResponseWriter, r *http.Request) {
 	timeWindow := r.URL.Query().Get("time_window")
