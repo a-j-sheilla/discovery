@@ -100,6 +100,33 @@ func (s *DiscoveryService) GetMovieDetails(movieID int) (*models.Movie, error) {
 	return tmdbMovie, nil
 }
 
+// GetTVShowDetails gets comprehensive TV show details from both APIs
+func (s *DiscoveryService) GetTVShowDetails(tvID int) (*models.TVShow, error) {
+	// Get basic details from TMDB
+	tmdbTVShow, err := s.tmdbClient.GetTVShowDetails(tvID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get TV show details from TMDB: %w", err)
+	}
+
+	// Try to enhance with OMDB data
+	if tmdbTVShow.Name != "" {
+		year := ""
+		if len(tmdbTVShow.FirstAirDate) >= 4 {
+			year = tmdbTVShow.FirstAirDate[:4]
+		}
+
+		omdbTVShow, err := s.omdbClient.GetTVShowByTitle(tmdbTVShow.Name, year)
+		if err != nil {
+			log.Printf("Failed to get OMDB data for TV show %s: %v", tmdbTVShow.Name, err)
+		} else {
+			// Merge OMDB data into TMDB TV show
+			s.mergeOMDBIntoTVShow(tmdbTVShow, omdbTVShow)
+		}
+	}
+
+	return tmdbTVShow, nil
+}
+
 // GetTrendingMovies gets trending movies from TMDB
 func (s *DiscoveryService) GetTrendingMovies(timeWindow string, page int) (*models.TrendingResponse, error) {
 	// Validate time window
@@ -214,6 +241,20 @@ func (s *DiscoveryService) mergeOMDBIntoMovie(movie *models.Movie, omdbData *OMD
 	}
 }
 
+// mergeOMDBIntoTVShow merges OMDB data into a TMDB TV show struct
+func (s *DiscoveryService) mergeOMDBIntoTVShow(tvShow *models.TVShow, omdbData *OMDBResponse) {
+	tvShow.IMDBRating = omdbData.IMDBRating
+	tvShow.RottenTomatoes = omdbData.GetRottenTomatoesRating()
+	tvShow.Plot = omdbData.Plot
+	tvShow.Director = omdbData.Director
+	tvShow.Writer = omdbData.Writer
+	tvShow.Actors = omdbData.Actors
+	tvShow.Language = omdbData.Language
+	tvShow.Country = omdbData.Country
+	tvShow.Awards = omdbData.Awards
+	tvShow.IMDBId = omdbData.IMDBID
+}
+
 // searchMoviesOMDBFallback provides fallback search using OMDB when TMDB fails
 func (s *DiscoveryService) searchMoviesOMDBFallback(query string, page int) (*models.SearchResult, error) {
 	omdbResults, err := s.omdbClient.SearchMovies(query, page)
@@ -250,11 +291,11 @@ func (s *DiscoveryService) ValidateSearchQuery(query string) error {
 	if strings.TrimSpace(query) == "" {
 		return fmt.Errorf("search query cannot be empty")
 	}
-	
+
 	if len(query) > 100 {
 		return fmt.Errorf("search query too long (max 100 characters)")
 	}
-	
+
 	return nil
 }
 
@@ -263,10 +304,10 @@ func (s *DiscoveryService) ValidatePage(page int) error {
 	if page < 1 {
 		return fmt.Errorf("page number must be positive")
 	}
-	
+
 	if page > 1000 {
 		return fmt.Errorf("page number too high (max 1000)")
 	}
-	
+
 	return nil
 }
