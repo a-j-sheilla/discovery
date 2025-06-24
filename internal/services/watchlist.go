@@ -1,12 +1,17 @@
 package services
 
 import (
+	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 
 	"movie-discovery-app/internal/models"
+
+	"github.com/jung-kurt/gofpdf/v2"
 )
 
 // WatchlistService manages user watchlists
@@ -301,6 +306,128 @@ func (s *WatchlistService) ImportWatchlist(userID string, data []byte, merge boo
 
 	s.watchlists[userID] = existingWatchlist
 	return nil
+}
+
+// ExportWatchlistAsCSV exports user's watchlist as CSV
+func (s *WatchlistService) ExportWatchlistAsCSV(userID string) ([]byte, error) {
+	watchlist, err := s.GetWatchlist(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+	writer := csv.NewWriter(&buf)
+
+	// Write CSV header
+	header := []string{"ID", "Type", "Title", "Poster Path", "Added At", "Watched", "Rating"}
+	if err := writer.Write(header); err != nil {
+		return nil, fmt.Errorf("failed to write CSV header: %w", err)
+	}
+
+	// Write watchlist items
+	for _, item := range watchlist {
+		record := []string{
+			item.ID,
+			item.Type,
+			item.Title,
+			item.PosterPath,
+			item.AddedAt.Format("2006-01-02 15:04:05"),
+			strconv.FormatBool(item.Watched),
+			strconv.FormatFloat(item.Rating, 'f', 1, 64),
+		}
+		if err := writer.Write(record); err != nil {
+			return nil, fmt.Errorf("failed to write CSV record: %w", err)
+		}
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return nil, fmt.Errorf("CSV writer error: %w", err)
+	}
+
+	return buf.Bytes(), nil
+}
+
+// ExportWatchlistAsPDF exports user's watchlist as PDF
+func (s *WatchlistService) ExportWatchlistAsPDF(userID string) ([]byte, error) {
+	watchlist, err := s.GetWatchlist(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create new PDF document
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.AddPage()
+
+	// Set title
+	pdf.SetFont("Arial", "B", 16)
+	pdf.Cell(0, 10, "My Watchlist")
+	pdf.Ln(15)
+
+	// Add stats
+	stats, _ := s.GetWatchlistStats(userID)
+	pdf.SetFont("Arial", "", 10)
+	pdf.Cell(0, 6, fmt.Sprintf("Total Items: %d | Movies: %d | TV Shows: %d | Watched: %d | To Watch: %d",
+		stats["total_items"], stats["movies"], stats["tv_shows"], stats["watched_items"], stats["unwatched_items"]))
+	pdf.Ln(10)
+
+	// Table headers
+	pdf.SetFont("Arial", "B", 9)
+	pdf.Cell(15, 8, "Type")
+	pdf.Cell(60, 8, "Title")
+	pdf.Cell(25, 8, "Added")
+	pdf.Cell(20, 8, "Status")
+	pdf.Cell(15, 8, "Rating")
+	pdf.Ln(8)
+
+	// Table content
+	pdf.SetFont("Arial", "", 8)
+	for _, item := range watchlist {
+		// Check if we need a new page
+		if pdf.GetY() > 270 {
+			pdf.AddPage()
+			// Re-add headers on new page
+			pdf.SetFont("Arial", "B", 9)
+			pdf.Cell(15, 8, "Type")
+			pdf.Cell(60, 8, "Title")
+			pdf.Cell(25, 8, "Added")
+			pdf.Cell(20, 8, "Status")
+			pdf.Cell(15, 8, "Rating")
+			pdf.Ln(8)
+			pdf.SetFont("Arial", "", 8)
+		}
+
+		// Truncate title if too long
+		title := item.Title
+		if len(title) > 35 {
+			title = title[:32] + "..."
+		}
+
+		status := "To Watch"
+		if item.Watched {
+			status = "Watched"
+		}
+
+		rating := "-"
+		if item.Rating > 0 {
+			rating = strconv.FormatFloat(item.Rating, 'f', 1, 64)
+		}
+
+		pdf.Cell(15, 6, item.Type)
+		pdf.Cell(60, 6, title)
+		pdf.Cell(25, 6, item.AddedAt.Format("2006-01-02"))
+		pdf.Cell(20, 6, status)
+		pdf.Cell(15, 6, rating)
+		pdf.Ln(6)
+	}
+
+	// Generate PDF bytes
+	var buf bytes.Buffer
+	if err := pdf.Output(&buf); err != nil {
+		return nil, fmt.Errorf("failed to generate PDF: %w", err)
+	}
+
+	return buf.Bytes(), nil
 }
 
 // validateWatchlistItem validates a watchlist item

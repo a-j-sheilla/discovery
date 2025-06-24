@@ -246,8 +246,10 @@ MovieDiscoveryApp.prototype.markAsWatched = async function(itemId, itemType, rat
 
 MovieDiscoveryApp.prototype.markAsUnwatched = async function(itemId, itemType) {
     try {
-        // For simplicity, we'll remove and re-add the item
-        // In a real app, you'd have a separate endpoint for this
+        await this.apiRequest(`/api/v1/watchlist/${itemType}/${itemId}/unwatched`, {
+            method: 'PUT'
+        });
+
         this.showToast('Marked as unwatched', 'success');
     } catch (error) {
         this.showToast('Failed to update watch status', 'error');
@@ -347,7 +349,82 @@ MovieDiscoveryApp.prototype.displayWatchlist = function(watchlistItems, filter =
     });
 };
 
-// Global function for filter buttons
+// Export functionality
+MovieDiscoveryApp.prototype.exportWatchlist = async function(format) {
+    try {
+        const response = await fetch(`/api/v1/watchlist/export/${format}`);
+
+        if (!response.ok) {
+            throw new Error(`Export failed: ${response.statusText}`);
+        }
+
+        // Get the blob data
+        const blob = await response.blob();
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // Set filename based on format
+        const filename = `watchlist.${format}`;
+        a.download = filename;
+
+        // Trigger download
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // Clean up
+        window.URL.revokeObjectURL(url);
+
+        this.showToast(`Watchlist exported as ${format.toUpperCase()}`, 'success');
+
+        // Close dropdown
+        this.closeExportDropdown();
+
+    } catch (error) {
+        console.error('Export failed:', error);
+        this.showToast('Failed to export watchlist', 'error');
+    }
+};
+
+MovieDiscoveryApp.prototype.toggleExportDropdown = function() {
+    const dropdown = document.getElementById('export-dropdown-menu');
+    dropdown.classList.toggle('show');
+
+    // Close dropdown when clicking outside
+    if (dropdown.classList.contains('show')) {
+        document.addEventListener('click', this.handleExportDropdownClick.bind(this));
+    } else {
+        document.removeEventListener('click', this.handleExportDropdownClick.bind(this));
+    }
+};
+
+MovieDiscoveryApp.prototype.handleExportDropdownClick = function(event) {
+    const dropdown = document.getElementById('export-dropdown-menu');
+    const exportBtn = document.querySelector('.export-btn');
+
+    if (!dropdown.contains(event.target) && !exportBtn.contains(event.target)) {
+        this.closeExportDropdown();
+    }
+};
+
+MovieDiscoveryApp.prototype.closeExportDropdown = function() {
+    const dropdown = document.getElementById('export-dropdown-menu');
+    dropdown.classList.remove('show');
+    document.removeEventListener('click', this.handleExportDropdownClick.bind(this));
+};
+
+// Global functions
 function filterWatchlist(filter) {
     app.filterWatchlist(filter);
+}
+
+function exportWatchlist(format) {
+    app.exportWatchlist(format);
+}
+
+function toggleExportDropdown() {
+    app.toggleExportDropdown();
 }

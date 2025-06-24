@@ -285,6 +285,175 @@ func (h *Handlers) GetWatchlistStats(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(stats)
 }
 
+// MarkAsUnwatched handles marking items as unwatched
+func (h *Handlers) MarkAsUnwatched(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID := "default_user"
+	vars := mux.Vars(r)
+	itemID := vars["id"]
+	itemType := vars["type"]
+
+	if err := h.watchlistService.MarkAsUnwatched(userID, itemID, itemType); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to mark as unwatched: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
+// ExportWatchlistAsJSON handles exporting watchlist as JSON
+func (h *Handlers) ExportWatchlistAsJSON(w http.ResponseWriter, r *http.Request) {
+	userID := "default_user"
+
+	data, err := h.watchlistService.ExportWatchlist(userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to export watchlist: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Disposition", "attachment; filename=watchlist.json")
+	w.Write(data)
+}
+
+// ExportWatchlistAsCSV handles exporting watchlist as CSV
+func (h *Handlers) ExportWatchlistAsCSV(w http.ResponseWriter, r *http.Request) {
+	userID := "default_user"
+
+	data, err := h.watchlistService.ExportWatchlistAsCSV(userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to export watchlist as CSV: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Disposition", "attachment; filename=watchlist.csv")
+	w.Write(data)
+}
+
+// ExportWatchlistAsPDF handles exporting watchlist as PDF
+func (h *Handlers) ExportWatchlistAsPDF(w http.ResponseWriter, r *http.Request) {
+	userID := "default_user"
+
+	data, err := h.watchlistService.ExportWatchlistAsPDF(userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to export watchlist as PDF: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", "attachment; filename=watchlist.pdf")
+	w.Write(data)
+}
+
+// GetTrailers handles getting trailers for a movie or TV show
+func (h *Handlers) GetTrailers(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	mediaType := vars["type"]
+	mediaIDStr := vars["id"]
+
+	mediaID, err := strconv.Atoi(mediaIDStr)
+	if err != nil {
+		http.Error(w, "Invalid media ID", http.StatusBadRequest)
+		return
+	}
+
+	var trailers []models.YouTubeVideo
+	switch mediaType {
+	case "movie":
+		trailers, err = h.discoveryService.GetMovieTrailers(mediaID)
+	case "tv":
+		trailers, err = h.discoveryService.GetTVTrailers(mediaID)
+	default:
+		http.Error(w, "Invalid media type", http.StatusBadRequest)
+		return
+	}
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get trailers: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(trailers)
+}
+
+// GetOfficialTrailer handles getting the official trailer for a movie or TV show
+func (h *Handlers) GetOfficialTrailer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	mediaType := vars["type"]
+	mediaIDStr := vars["id"]
+
+	mediaID, err := strconv.Atoi(mediaIDStr)
+	if err != nil {
+		http.Error(w, "Invalid media ID", http.StatusBadRequest)
+		return
+	}
+
+	trailer, err := h.discoveryService.GetOfficialTrailer(mediaID, mediaType)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get official trailer: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(trailer)
+}
+
+// GetWatchProviders handles getting watch providers for a movie or TV show
+func (h *Handlers) GetWatchProviders(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	mediaType := vars["type"]
+	mediaIDStr := vars["id"]
+
+	mediaID, err := strconv.Atoi(mediaIDStr)
+	if err != nil {
+		http.Error(w, "Invalid media ID", http.StatusBadRequest)
+		return
+	}
+
+	providers, err := h.discoveryService.GetWatchProviders(mediaID, mediaType)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get watch providers: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(providers)
+}
+
+// GetStreamingServices handles getting streaming services for a specific region
+func (h *Handlers) GetStreamingServices(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	mediaType := vars["type"]
+	mediaIDStr := vars["id"]
+	region := r.URL.Query().Get("region")
+
+	if region == "" {
+		region = "US" // Default to US
+	}
+
+	mediaID, err := strconv.Atoi(mediaIDStr)
+	if err != nil {
+		http.Error(w, "Invalid media ID", http.StatusBadRequest)
+		return
+	}
+
+	services, err := h.discoveryService.GetStreamingServices(mediaID, mediaType, region)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get streaming services: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(services)
+}
+
 // HealthCheck handles health check requests
 func (h *Handlers) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -375,6 +544,18 @@ func (h *Handlers) DiscoverByGenre(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Parse content type parameter (movies or tv)
+	contentType := r.URL.Query().Get("type")
+	if contentType == "" {
+		contentType = "movies" // Default to movies
+	}
+
+	// Validate content type
+	if contentType != "movies" && contentType != "tv" {
+		http.Error(w, "Invalid content type. Must be 'movies' or 'tv'", http.StatusBadRequest)
+		return
+	}
+
 	// Parse page parameter
 	page := 1
 	if pageStr := r.URL.Query().Get("page"); pageStr != "" {
@@ -412,10 +593,21 @@ func (h *Handlers) DiscoverByGenre(w http.ResponseWriter, r *http.Request) {
 	// Validate filters
 	filters.Validate()
 
-	results, err := h.genreService.DiscoverMoviesByGenre(genreID, page, filters)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to discover movies: %v", err), http.StatusInternalServerError)
-		return
+	// Call appropriate discovery method based on content type
+	var results *models.SearchResult
+	switch contentType {
+	case "movies":
+		results, err = h.genreService.DiscoverMoviesByGenre(genreID, page, filters)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to discover movies: %v", err), http.StatusInternalServerError)
+			return
+		}
+	case "tv":
+		results, err = h.genreService.DiscoverTVShowsByGenre(genreID, page, filters)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to discover TV shows: %v", err), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.Header().Set("Content-Type", "application/json")

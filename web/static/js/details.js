@@ -1,6 +1,9 @@
 // Movie/TV show details functionality
 MovieDiscoveryApp.prototype.showMovieDetails = async function(itemId, itemType = 'movie') {
     try {
+        // Store current media info for advanced features
+        this.setCurrentMedia(itemId, itemType);
+
         let data;
         if (itemType === 'movie') {
             data = await this.apiRequest(`/api/v1/movies/${itemId}`);
@@ -13,16 +16,43 @@ MovieDiscoveryApp.prototype.showMovieDetails = async function(itemId, itemType =
 
         this.displayMovieDetails(data, itemType);
         document.getElementById('movie-modal').style.display = 'block';
+
+        // Load advanced features silently in the background (no error popups)
+        this.loadAdvancedFeaturesSilently(itemId, itemType);
+
     } catch (error) {
         console.error('Failed to load details:', error);
         this.showToast(`Failed to load ${itemType === 'tv' ? 'TV show' : 'movie'} details`, 'error');
     }
 };
 
+// Load advanced features without showing error popups
+MovieDiscoveryApp.prototype.loadAdvancedFeaturesSilently = async function(itemId, itemType) {
+    // Load trailers silently
+    try {
+        const trailers = await this.silentApiRequest(`/api/v1/${itemType}/${itemId}/trailers`);
+        this.displayTrailers(trailers, itemId, itemType);
+    } catch (error) {
+        console.log('Trailers not available:', error.message);
+        // Show "no trailers" message instead of error
+        this.displayTrailers([], itemId, itemType);
+    }
+
+    // Load watch providers silently
+    try {
+        const providers = await this.silentApiRequest(`/api/v1/${itemType}/${itemId}/providers`);
+        this.displayWatchProviders(providers, 'US');
+    } catch (error) {
+        console.log('Watch providers not available:', error.message);
+        // Show "no providers" message instead of error
+        this.displayWatchProviders(null, 'US');
+    }
+};
+
 MovieDiscoveryApp.prototype.displayMovieDetails = function(movie, itemType) {
     const detailsContainer = document.getElementById('movie-details');
     
-    const backdropUrl = movie.backdrop_path 
+    const backdropUrl = movie.backdrop_path
         ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
         : '/static/images/no-backdrop.jpg';
     
@@ -124,60 +154,21 @@ MovieDiscoveryApp.prototype.displayMovieDetails = function(movie, itemType) {
                 </div>
             </div>
             
-            ${plot ? `
-                <div class="movie-overview">
-                    <h3>Overview</h3>
-                    <p>${plot}</p>
-                </div>
-            ` : ''}
-            
-            <div class="movie-details-sections">
-                ${director ? `
-                    <div class="details-section">
-                        <h3>Director</h3>
-                        <p>${director}</p>
-                    </div>
-                ` : ''}
-                
-                ${writer ? `
-                    <div class="details-section">
-                        <h3>Writer</h3>
-                        <p>${writer}</p>
-                    </div>
-                ` : ''}
-                
-                ${actors ? `
-                    <div class="details-section">
-                        <h3>Cast</h3>
-                        <p>${actors}</p>
-                    </div>
-                ` : ''}
-                
-                ${country ? `
-                    <div class="details-section">
-                        <h3>Country</h3>
-                        <p>${country}</p>
-                    </div>
-                ` : ''}
-                
-                ${awards && awards !== 'N/A' ? `
-                    <div class="details-section">
-                        <h3>Awards</h3>
-                        <p>${awards}</p>
-                    </div>
-                ` : ''}
-            </div>
+            <!-- Detailed information moved to Overview tab -->
         </div>
     `;
     
     // Update watchlist button state
     this.updateDetailsWatchlistButton(movie.id, itemType);
+
+    // Populate the overview tab with detailed information
+    this.populateOverviewTab(movie, itemType);
 };
 
 MovieDiscoveryApp.prototype.updateDetailsWatchlistButton = async function(itemId, itemType) {
     const isInWatchlist = await this.isInWatchlist(itemId, itemType);
     const button = document.querySelector('.movie-details .action-btn.primary');
-    
+
     if (button) {
         if (isInWatchlist) {
             button.innerHTML = '<i class="fas fa-check"></i> In Watchlist';
@@ -187,6 +178,64 @@ MovieDiscoveryApp.prototype.updateDetailsWatchlistButton = async function(itemId
             button.classList.remove('in-watchlist');
         }
     }
+};
+
+MovieDiscoveryApp.prototype.populateOverviewTab = function(movie, itemType) {
+    const overviewTab = document.getElementById('overview-tab');
+    if (!overviewTab) return;
+
+    const plot = movie.plot || movie.overview || '';
+    const director = movie.director || '';
+    const writer = movie.writer || '';
+    const actors = movie.actors || '';
+    const country = movie.country || '';
+    const awards = movie.awards || '';
+
+    overviewTab.innerHTML = `
+        ${plot ? `
+            <div class="movie-overview">
+                <h3>Overview</h3>
+                <p>${plot}</p>
+            </div>
+        ` : ''}
+
+        <div class="movie-details-sections">
+            ${director ? `
+                <div class="details-section">
+                    <h3>Director</h3>
+                    <p>${director}</p>
+                </div>
+            ` : ''}
+
+            ${writer ? `
+                <div class="details-section">
+                    <h3>Writer</h3>
+                    <p>${writer}</p>
+                </div>
+            ` : ''}
+
+            ${actors ? `
+                <div class="details-section">
+                    <h3>Cast</h3>
+                    <p>${actors}</p>
+                </div>
+            ` : ''}
+
+            ${country ? `
+                <div class="details-section">
+                    <h3>Country</h3>
+                    <p>${country}</p>
+                </div>
+            ` : ''}
+
+            ${awards && awards !== 'N/A' ? `
+                <div class="details-section">
+                    <h3>Awards</h3>
+                    <p>${awards}</p>
+                </div>
+            ` : ''}
+        </div>
+    `;
 };
 
 MovieDiscoveryApp.prototype.shareMovie = function(title, movieId) {
