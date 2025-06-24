@@ -52,7 +52,7 @@ MovieDiscoveryApp.prototype.loadAdvancedFeaturesSilently = async function(itemId
 MovieDiscoveryApp.prototype.displayMovieDetails = function(movie, itemType) {
     const detailsContainer = document.getElementById('movie-details');
     
-    const backdropUrl = movie.backdrop_path 
+    const backdropUrl = movie.backdrop_path
         ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
         : '/static/images/no-backdrop.jpg';
     

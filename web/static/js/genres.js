@@ -170,9 +170,9 @@ class GenreManager {
             const title = isMovie ? item.title : item.name;
             const date = isMovie ? item.release_date : item.first_air_date;
             const year = date ? new Date(date).getFullYear() : 'N/A';
-            const posterUrl = item.poster_path 
+            const posterUrl = item.poster_path
                 ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
-                : '/static/images/no-poster.jpg';
+                : '/static/images/placeholder.svg';
 
             return `
                 <div class="movie-card" onclick="showMovieDetails(${item.id}, '${this.currentGenreType === 'movies' ? 'movie' : 'tv'}')">

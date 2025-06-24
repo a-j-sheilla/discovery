@@ -38,9 +38,9 @@ MovieDiscoveryApp.prototype.createTrendingCard = function(item) {
     card.className = 'movie-card trending-card';
     card.style.position = 'relative';
 
-    const posterUrl = item.poster_path 
+    const posterUrl = item.poster_path
         ? `https://image.tmdb.org/t/p/w300${item.poster_path}`
-        : '/static/images/no-poster.jpg';
+        : '/static/images/placeholder.svg';
 
     const title = item.title || item.name || 'Unknown Title';
     const year = item.release_date || item.first_air_date || '';
@@ -55,8 +55,8 @@ MovieDiscoveryApp.prototype.createTrendingCard = function(item) {
             <i class="fas fa-fire"></i>
             <span>${Math.round(popularity)}</span>
         </div>
-        <img src="${posterUrl}" alt="${title}" class="movie-poster" 
-             onerror="this.src='/static/images/no-poster.jpg'">
+        <img src="${posterUrl}" alt="${title}" class="movie-poster"
+             onerror="this.src='/static/images/placeholder.svg'">
         <button class="watchlist-btn" onclick="app.toggleWatchlist('${item.id}', '${type}', '${title}', '${posterUrl}')">
             <i class="fas fa-bookmark"></i>
         </button>
