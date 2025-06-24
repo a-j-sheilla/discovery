@@ -27,6 +27,9 @@ func SetupRouter(handlers *Handlers) *mux.Router {
 	// Movie details
 	api.HandleFunc("/movies/{id:[0-9]+}", handlers.GetMovieDetails).Methods("GET")
 
+	// TV show details
+	api.HandleFunc("/tv/{id:[0-9]+}", handlers.GetTVShowDetails).Methods("GET")
+
 	// Trending content
 	api.HandleFunc("/trending/movies", handlers.GetTrendingMovies).Methods("GET")
 
