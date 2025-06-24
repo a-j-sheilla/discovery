@@ -4,17 +4,18 @@ MovieDiscoveryApp.prototype.showMovieDetails = async function(itemId, itemType =
         let data;
         if (itemType === 'movie') {
             data = await this.apiRequest(`/api/v1/movies/${itemId}`);
+        } else if (itemType === 'tv') {
+            // Use the proper TV show endpoint
+            data = await this.apiRequest(`/api/v1/tv/${itemId}`);
         } else {
-            // For TV shows, we'll use the movie endpoint for now
-            // In a real app, you'd have separate TV show endpoints
-            data = await this.apiRequest(`/api/v1/movies/${itemId}`);
+            throw new Error(`Unknown item type: ${itemType}`);
         }
-        
+
         this.displayMovieDetails(data, itemType);
         document.getElementById('movie-modal').style.display = 'block';
     } catch (error) {
-        console.error('Failed to load movie details:', error);
-        this.showToast('Failed to load details', 'error');
+        console.error('Failed to load details:', error);
+        this.showToast(`Failed to load ${itemType === 'tv' ? 'TV show' : 'movie'} details`, 'error');
     }
 };
 
@@ -35,6 +36,12 @@ MovieDiscoveryApp.prototype.displayMovieDetails = function(movie, itemType) {
     const runtime = movie.runtime ? `${movie.runtime} min` : '';
     const rating = movie.vote_average || 0;
     const voteCount = movie.vote_count || 0;
+
+    // TV show specific fields
+    const seasons = movie.number_of_seasons ? `${movie.number_of_seasons} season${movie.number_of_seasons > 1 ? 's' : ''}` : '';
+    const episodes = movie.number_of_episodes ? `${movie.number_of_episodes} episode${movie.number_of_episodes > 1 ? 's' : ''}` : '';
+    const lastAirDate = movie.last_air_date || '';
+    const isOngoing = itemType === 'tv' && lastAirDate && new Date(lastAirDate) > new Date();
     
     // Format genres
     const genres = movie.genres ? movie.genres.map(g => g.name).join(', ') : '';
@@ -63,8 +70,10 @@ MovieDiscoveryApp.prototype.displayMovieDetails = function(movie, itemType) {
                     <h1 class="movie-details-title">${title}</h1>
                     
                     <div class="movie-details-meta">
-                        ${year ? `<div class="meta-item"><i class="fas fa-calendar"></i> ${year}</div>` : ''}
-                        ${runtime ? `<div class="meta-item"><i class="fas fa-clock"></i> ${runtime}</div>` : ''}
+                        ${year ? `<div class="meta-item"><i class="fas fa-calendar"></i> ${year}${isOngoing ? ' - Ongoing' : ''}</div>` : ''}
+                        ${itemType === 'movie' && runtime ? `<div class="meta-item"><i class="fas fa-clock"></i> ${runtime}</div>` : ''}
+                        ${itemType === 'tv' && seasons ? `<div class="meta-item"><i class="fas fa-tv"></i> ${seasons}</div>` : ''}
+                        ${itemType === 'tv' && episodes ? `<div class="meta-item"><i class="fas fa-list"></i> ${episodes}</div>` : ''}
                         ${genres ? `<div class="meta-item"><i class="fas fa-tags"></i> ${genres}</div>` : ''}
                         ${language ? `<div class="meta-item"><i class="fas fa-language"></i> ${language}</div>` : ''}
                     </div>
