@@ -285,6 +285,72 @@ func (h *Handlers) GetWatchlistStats(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(stats)
 }
 
+// MarkAsUnwatched handles marking items as unwatched
+func (h *Handlers) MarkAsUnwatched(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID := "default_user"
+	vars := mux.Vars(r)
+	itemID := vars["id"]
+	itemType := vars["type"]
+
+	if err := h.watchlistService.MarkAsUnwatched(userID, itemID, itemType); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to mark as unwatched: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
+// ExportWatchlistAsJSON handles exporting watchlist as JSON
+func (h *Handlers) ExportWatchlistAsJSON(w http.ResponseWriter, r *http.Request) {
+	userID := "default_user"
+
+	data, err := h.watchlistService.ExportWatchlist(userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to export watchlist: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Disposition", "attachment; filename=watchlist.json")
+	w.Write(data)
+}
+
+// ExportWatchlistAsCSV handles exporting watchlist as CSV
+func (h *Handlers) ExportWatchlistAsCSV(w http.ResponseWriter, r *http.Request) {
+	userID := "default_user"
+
+	data, err := h.watchlistService.ExportWatchlistAsCSV(userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to export watchlist as CSV: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Disposition", "attachment; filename=watchlist.csv")
+	w.Write(data)
+}
+
+// ExportWatchlistAsPDF handles exporting watchlist as PDF
+func (h *Handlers) ExportWatchlistAsPDF(w http.ResponseWriter, r *http.Request) {
+	userID := "default_user"
+
+	data, err := h.watchlistService.ExportWatchlistAsPDF(userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to export watchlist as PDF: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", "attachment; filename=watchlist.pdf")
+	w.Write(data)
+}
+
 // HealthCheck handles health check requests
 func (h *Handlers) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
