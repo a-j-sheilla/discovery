@@ -12,8 +12,10 @@ import (
 
 // DiscoveryService combines TMDB and OMDB data for comprehensive movie/TV discovery
 type DiscoveryService struct {
-	tmdbClient *TMDBClient
-	omdbClient *OMDBClient
+	tmdbClient       *TMDBClient
+	omdbClient       *OMDBClient
+	youtubeService   *YouTubeService
+	providersService *ProvidersService
 }
 
 // NewDiscoveryService creates a new discovery service
@@ -22,8 +24,10 @@ func NewDiscoveryService(config *configs.Config) *DiscoveryService {
 	omdbClient := NewOMDBClient(&config.OMDB, &config.Cache, &config.Rate)
 
 	return &DiscoveryService{
-		tmdbClient: tmdbClient,
-		omdbClient: omdbClient,
+		tmdbClient:       tmdbClient,
+		omdbClient:       omdbClient,
+		youtubeService:   NewYouTubeService(),
+		providersService: NewProvidersService(),
 	}
 }
 
@@ -310,4 +314,74 @@ func (s *DiscoveryService) ValidatePage(page int) error {
 	}
 
 	return nil
+}
+
+// GetMovieTrailers gets trailers for a movie
+func (s *DiscoveryService) GetMovieTrailers(movieID int) ([]models.YouTubeVideo, error) {
+	// First try to get movie details to get title and year
+	movie, err := s.tmdbClient.GetMovieDetails(movieID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get movie details: %w", err)
+	}
+
+	year := ""
+	if movie.ReleaseDate != "" && len(movie.ReleaseDate) >= 4 {
+		year = movie.ReleaseDate[:4]
+	}
+
+	return s.youtubeService.SearchTrailers(movie.Title, year, "movie")
+}
+
+// GetTVTrailers gets trailers for a TV show
+func (s *DiscoveryService) GetTVTrailers(tvID int) ([]models.YouTubeVideo, error) {
+	// First try to get TV details to get title and year
+	tvShow, err := s.tmdbClient.GetTVShowDetails(tvID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get TV show details: %w", err)
+	}
+
+	year := ""
+	if tvShow.FirstAirDate != "" && len(tvShow.FirstAirDate) >= 4 {
+		year = tvShow.FirstAirDate[:4]
+	}
+
+	return s.youtubeService.SearchTrailers(tvShow.Name, year, "tv")
+}
+
+// GetOfficialTrailer gets the most relevant official trailer
+func (s *DiscoveryService) GetOfficialTrailer(mediaID int, mediaType string) (*models.YouTubeVideo, error) {
+	switch mediaType {
+	case "movie":
+		movie, err := s.tmdbClient.GetMovieDetails(mediaID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get movie details: %w", err)
+		}
+		year := ""
+		if movie.ReleaseDate != "" && len(movie.ReleaseDate) >= 4 {
+			year = movie.ReleaseDate[:4]
+		}
+		return s.youtubeService.GetOfficialTrailer(movie.Title, year, "movie")
+	case "tv":
+		tvShow, err := s.tmdbClient.GetTVShowDetails(mediaID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get TV show details: %w", err)
+		}
+		year := ""
+		if tvShow.FirstAirDate != "" && len(tvShow.FirstAirDate) >= 4 {
+			year = tvShow.FirstAirDate[:4]
+		}
+		return s.youtubeService.GetOfficialTrailer(tvShow.Name, year, "tv")
+	default:
+		return nil, fmt.Errorf("unsupported media type: %s", mediaType)
+	}
+}
+
+// GetWatchProviders gets watch providers for a movie or TV show
+func (s *DiscoveryService) GetWatchProviders(mediaID int, mediaType string) (*models.WatchProviders, error) {
+	return s.providersService.GetWatchProviders(mediaID, mediaType)
+}
+
+// GetStreamingServices gets streaming services for a specific region
+func (s *DiscoveryService) GetStreamingServices(mediaID int, mediaType string, region string) ([]models.WatchProvider, error) {
+	return s.providersService.GetStreamingServices(mediaID, mediaType, region)
 }
