@@ -16,9 +16,9 @@ import (
 
 // TMDBClient handles TMDB API interactions
 type TMDBClient struct {
-	config     *configs.TMDBConfig
-	httpClient *http.Client
-	cache      *Cache
+	config      *configs.TMDBConfig
+	httpClient  *http.Client
+	cache       *Cache
 	rateLimiter *RateLimiter
 }
 
@@ -62,7 +62,7 @@ func NewTMDBClient(config *configs.TMDBConfig, cacheConfig *configs.CacheConfig,
 // SearchMovies searches for movies using TMDB API
 func (c *TMDBClient) SearchMovies(query string, page int) (*models.SearchResult, error) {
 	cacheKey := fmt.Sprintf("search_movies_%s_%d", query, page)
-	
+
 	// Check cache first
 	if cached := c.cache.Get(cacheKey); cached != nil {
 		if result, ok := cached.(*models.SearchResult); ok {
@@ -113,7 +113,7 @@ func (c *TMDBClient) SearchMovies(query string, page int) (*models.SearchResult,
 // SearchTVShows searches for TV shows using TMDB API
 func (c *TMDBClient) SearchTVShows(query string, page int) (*models.SearchResult, error) {
 	cacheKey := fmt.Sprintf("search_tv_%s_%d", query, page)
-	
+
 	// Check cache first
 	if cached := c.cache.Get(cacheKey); cached != nil {
 		if result, ok := cached.(*models.SearchResult); ok {
@@ -164,7 +164,7 @@ func (c *TMDBClient) SearchTVShows(query string, page int) (*models.SearchResult
 // GetMovieDetails gets detailed movie information
 func (c *TMDBClient) GetMovieDetails(movieID int) (*models.Movie, error) {
 	cacheKey := fmt.Sprintf("movie_details_%d", movieID)
-	
+
 	// Check cache first
 	if cached := c.cache.Get(cacheKey); cached != nil {
 		if movie, ok := cached.(*models.Movie); ok {
@@ -210,10 +210,59 @@ func (c *TMDBClient) GetMovieDetails(movieID int) (*models.Movie, error) {
 	return &movie, nil
 }
 
+// GetTVShowDetails gets detailed TV show information
+func (c *TMDBClient) GetTVShowDetails(tvID int) (*models.TVShow, error) {
+	cacheKey := fmt.Sprintf("tv_details_%d", tvID)
+
+	// Check cache first
+	if cached := c.cache.Get(cacheKey); cached != nil {
+		if tvShow, ok := cached.(*models.TVShow); ok {
+			return tvShow, nil
+		}
+	}
+
+	// Rate limiting
+	if err := c.rateLimiter.Wait(); err != nil {
+		return nil, err
+	}
+
+	// Build URL
+	params := url.Values{}
+	params.Add("api_key", c.config.APIKey)
+
+	url := fmt.Sprintf("%s/tv/%d?%s", c.config.BaseURL, tvID, params.Encode())
+
+	// Make request
+	resp, err := c.httpClient.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get TV show details: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("TMDB API error: %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	var tvShow models.TVShow
+	if err := json.Unmarshal(body, &tvShow); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	// Cache the result
+	c.cache.Set(cacheKey, &tvShow, 30*time.Minute)
+
+	return &tvShow, nil
+}
+
 // GetTrendingMovies gets trending movies
 func (c *TMDBClient) GetTrendingMovies(timeWindow string, page int) (*models.TrendingResponse, error) {
 	cacheKey := fmt.Sprintf("trending_movies_%s_%d", timeWindow, page)
-	
+
 	// Check cache first
 	if cached := c.cache.Get(cacheKey); cached != nil {
 		if result, ok := cached.(*models.TrendingResponse); ok {
@@ -264,19 +313,19 @@ func (c *TMDBClient) GetTrendingMovies(timeWindow string, page int) (*models.Tre
 func (c *Cache) Get(key string) interface{} {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	
+
 	item, exists := c.data[key]
 	if !exists || time.Now().After(item.ExpiresAt) {
 		return nil
 	}
-	
+
 	return item.Data
 }
 
 func (c *Cache) Set(key string, data interface{}, duration time.Duration) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	c.data[key] = CacheItem{
 		Data:      data,
 		ExpiresAt: time.Now().Add(duration),
@@ -286,7 +335,7 @@ func (c *Cache) Set(key string, data interface{}, duration time.Duration) {
 // RateLimiter methods
 func (rl *RateLimiter) Wait() error {
 	now := time.Now()
-	
+
 	// Remove old requests outside the window
 	for {
 		select {
@@ -304,13 +353,13 @@ func (rl *RateLimiter) Wait() error {
 			goto checkLimit
 		}
 	}
-	
+
 checkLimit:
 	// Check if we can make a new request
 	if len(rl.requests) >= rl.limit {
 		return fmt.Errorf("rate limit exceeded")
 	}
-	
+
 	// Add current request
 	select {
 	case rl.requests <- now:
