@@ -270,13 +270,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Gorilla Mux](https://github.com/gorilla/mux) for HTTP routing
 - [Font Awesome](https://fontawesome.com/) for icons
 
-## 📞 Support
-
-If you have any questions or run into issues, please:
-1. Check the [Issues](https://github.com/yourusername/movie-discovery-app/issues) page
-2. Create a new issue with detailed information
-3. Contact the maintainers
-
----
 
 **Happy movie discovering! 🎬🍿**
