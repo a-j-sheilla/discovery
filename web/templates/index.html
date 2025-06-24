@@ -18,6 +18,7 @@
             <ul class="nav-menu">
                 <li><a href="#" onclick="showHome()" class="nav-link active">Home</a></li>
                 <li><a href="#" onclick="showTrending()" class="nav-link">Trending</a></li>
+                <li><a href="#" onclick="showGenres()" class="nav-link">Genres</a></li>
                 <li><a href="#" onclick="showWatchlist()" class="nav-link">My Watchlist</a></li>
             </ul>
             <div class="theme-toggle">
@@ -73,6 +74,38 @@
             <div id="trending-grid" class="results-grid"></div>
         </section>
 
+        <!-- Genre Filtering Section -->
+        <section id="genre-section" class="section">
+            <div class="section-header">
+                <h2>Browse by Genre</h2>
+                <div class="genre-type-buttons">
+                    <button onclick="setGenreType('movies')" class="filter-btn active" data-genre-type="movies">Movies</button>
+                    <button onclick="setGenreType('tv')" class="filter-btn" data-genre-type="tv">TV Shows</button>
+                </div>
+            </div>
+            <div id="genre-filters" class="genre-filters">
+                <div class="genre-buttons" id="genre-buttons">
+                    <!-- Genre buttons will be populated dynamically -->
+                </div>
+                <div class="genre-sort-options">
+                    <select id="genre-sort" onchange="applyGenreSort()">
+                        <option value="popularity.desc">Most Popular</option>
+                        <option value="vote_average.desc">Highest Rated</option>
+                        <option value="release_date.desc">Newest</option>
+                        <option value="release_date.asc">Oldest</option>
+                    </select>
+                </div>
+            </div>
+            <div id="genre-results" class="genre-results">
+                <div class="results-header">
+                    <h3 id="genre-results-title">Select a Genre</h3>
+                    <p id="genre-results-count">Choose a genre to explore</p>
+                </div>
+                <div id="genre-results-grid" class="results-grid"></div>
+                <div id="genre-pagination" class="pagination"></div>
+            </div>
+        </section>
+
         <!-- Watchlist Section -->
         <section id="watchlist-section" class="section">
             <div class="section-header">
@@ -110,5 +143,6 @@
     <script src="/static/js/search.js?v=2.0"></script>
     <script src="/static/js/trending.js?v=2.0"></script>
     <script src="/static/js/details.js?v=2.0"></script>
+    <script src="/static/js/genres.js?v=2.0"></script>
 </body>
 </html>
