@@ -46,7 +46,13 @@ func SetupRouter(handlers *Handlers) *mux.Router {
 	api.HandleFunc("/watchlist", handlers.AddToWatchlist).Methods("POST")
 	api.HandleFunc("/watchlist/{type}/{id}", handlers.RemoveFromWatchlist).Methods("DELETE")
 	api.HandleFunc("/watchlist/{type}/{id}/watched", handlers.MarkAsWatched).Methods("PUT")
+	api.HandleFunc("/watchlist/{type}/{id}/unwatched", handlers.MarkAsUnwatched).Methods("PUT")
 	api.HandleFunc("/watchlist/stats", handlers.GetWatchlistStats).Methods("GET")
+
+	// Watchlist export endpoints
+	api.HandleFunc("/watchlist/export/json", handlers.ExportWatchlistAsJSON).Methods("GET")
+	api.HandleFunc("/watchlist/export/csv", handlers.ExportWatchlistAsCSV).Methods("GET")
+	api.HandleFunc("/watchlist/export/pdf", handlers.ExportWatchlistAsPDF).Methods("GET")
 
 	// Static file serving
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./web/static/"))))
