@@ -30,7 +30,7 @@ MovieDiscoveryApp.prototype.showMovieDetails = async function(itemId, itemType =
 MovieDiscoveryApp.prototype.loadAdvancedFeaturesSilently = async function(itemId, itemType) {
     // Load trailers silently
     try {
-        const trailers = await this.apiRequest(`/api/v1/${itemType}/${itemId}/trailers`);
+        const trailers = await this.silentApiRequest(`/api/v1/${itemType}/${itemId}/trailers`);
         this.displayTrailers(trailers, itemId, itemType);
     } catch (error) {
         console.log('Trailers not available:', error.message);
@@ -40,7 +40,7 @@ MovieDiscoveryApp.prototype.loadAdvancedFeaturesSilently = async function(itemId
 
     // Load watch providers silently
     try {
-        const providers = await this.apiRequest(`/api/v1/${itemType}/${itemId}/providers`);
+        const providers = await this.silentApiRequest(`/api/v1/${itemType}/${itemId}/providers`);
         this.displayWatchProviders(providers, 'US');
     } catch (error) {
         console.log('Watch providers not available:', error.message);
