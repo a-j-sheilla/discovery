@@ -123,11 +123,12 @@ class GenreManager {
         try {
             const params = new URLSearchParams({
                 page: this.currentPage,
-                sort_by: this.currentSort
+                sort_by: this.currentSort,
+                type: this.currentGenreType
             });
 
             const response = await fetch(`/api/v1/discover/genre/${this.currentGenreId}?${params}`);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -175,7 +176,7 @@ class GenreManager {
                 : '/static/images/placeholder.svg';
 
             return `
-                <div class="movie-card" onclick="showMovieDetails(${item.id}, '${this.currentGenreType === 'movies' ? 'movie' : 'tv'}')">
+                <div class="movie-card" onclick="app.showMovieDetails(${item.id}, '${this.currentGenreType === 'movies' ? 'movie' : 'tv'}')">
                     <img src="${posterUrl}" alt="${title}" class="movie-poster" loading="lazy">
                     <div class="movie-info">
                         <div class="movie-title">${title}</div>
@@ -187,7 +188,7 @@ class GenreManager {
                             </div>
                         ` : ''}
                     </div>
-                    <button class="watchlist-btn" onclick="event.stopPropagation(); toggleWatchlist(${item.id}, '${this.currentGenreType === 'movies' ? 'movie' : 'tv'}', '${title}', '${posterUrl}')">
+                    <button class="watchlist-btn" onclick="event.stopPropagation(); app.toggleWatchlist(${item.id}, '${this.currentGenreType === 'movies' ? 'movie' : 'tv'}', '${title}', '${posterUrl}')">
                         <i class="fas fa-plus"></i>
                     </button>
                 </div>
