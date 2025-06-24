@@ -351,6 +351,109 @@ func (h *Handlers) ExportWatchlistAsPDF(w http.ResponseWriter, r *http.Request) 
 	w.Write(data)
 }
 
+// GetTrailers handles getting trailers for a movie or TV show
+func (h *Handlers) GetTrailers(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	mediaType := vars["type"]
+	mediaIDStr := vars["id"]
+
+	mediaID, err := strconv.Atoi(mediaIDStr)
+	if err != nil {
+		http.Error(w, "Invalid media ID", http.StatusBadRequest)
+		return
+	}
+
+	var trailers []models.YouTubeVideo
+	switch mediaType {
+	case "movie":
+		trailers, err = h.discoveryService.GetMovieTrailers(mediaID)
+	case "tv":
+		trailers, err = h.discoveryService.GetTVTrailers(mediaID)
+	default:
+		http.Error(w, "Invalid media type", http.StatusBadRequest)
+		return
+	}
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get trailers: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(trailers)
+}
+
+// GetOfficialTrailer handles getting the official trailer for a movie or TV show
+func (h *Handlers) GetOfficialTrailer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	mediaType := vars["type"]
+	mediaIDStr := vars["id"]
+
+	mediaID, err := strconv.Atoi(mediaIDStr)
+	if err != nil {
+		http.Error(w, "Invalid media ID", http.StatusBadRequest)
+		return
+	}
+
+	trailer, err := h.discoveryService.GetOfficialTrailer(mediaID, mediaType)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get official trailer: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(trailer)
+}
+
+// GetWatchProviders handles getting watch providers for a movie or TV show
+func (h *Handlers) GetWatchProviders(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	mediaType := vars["type"]
+	mediaIDStr := vars["id"]
+
+	mediaID, err := strconv.Atoi(mediaIDStr)
+	if err != nil {
+		http.Error(w, "Invalid media ID", http.StatusBadRequest)
+		return
+	}
+
+	providers, err := h.discoveryService.GetWatchProviders(mediaID, mediaType)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get watch providers: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(providers)
+}
+
+// GetStreamingServices handles getting streaming services for a specific region
+func (h *Handlers) GetStreamingServices(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	mediaType := vars["type"]
+	mediaIDStr := vars["id"]
+	region := r.URL.Query().Get("region")
+
+	if region == "" {
+		region = "US" // Default to US
+	}
+
+	mediaID, err := strconv.Atoi(mediaIDStr)
+	if err != nil {
+		http.Error(w, "Invalid media ID", http.StatusBadRequest)
+		return
+	}
+
+	services, err := h.discoveryService.GetStreamingServices(mediaID, mediaType, region)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get streaming services: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(services)
+}
+
 // HealthCheck handles health check requests
 func (h *Handlers) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")

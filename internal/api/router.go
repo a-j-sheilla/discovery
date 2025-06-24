@@ -54,6 +54,12 @@ func SetupRouter(handlers *Handlers) *mux.Router {
 	api.HandleFunc("/watchlist/export/csv", handlers.ExportWatchlistAsCSV).Methods("GET")
 	api.HandleFunc("/watchlist/export/pdf", handlers.ExportWatchlistAsPDF).Methods("GET")
 
+	// Advanced features endpoints
+	api.HandleFunc("/{type}/{id}/trailers", handlers.GetTrailers).Methods("GET")
+	api.HandleFunc("/{type}/{id}/trailer", handlers.GetOfficialTrailer).Methods("GET")
+	api.HandleFunc("/{type}/{id}/providers", handlers.GetWatchProviders).Methods("GET")
+	api.HandleFunc("/{type}/{id}/streaming", handlers.GetStreamingServices).Methods("GET")
+
 	// Static file serving
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./web/static/"))))
 
